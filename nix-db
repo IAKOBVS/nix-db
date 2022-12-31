@@ -3,7 +3,6 @@
 [ -s /usr/bin/grep ] && alias grep=rg
 DATA_DIR=$HOME/.local/bin/database/
 files=$(find "$DATA_DIR" -type f ! -name '*.sh')
-# vars=$(for file in $files; do head -n1 "$file"; done)
 vars=($(for file in $files; do head -n1 "$file"; done))
 whereVar(){ i=1
 	for var in "${vars[@]}"; do
@@ -25,4 +24,3 @@ whereDate(){ whereWhich date "$1";}
 whereItem(){ whereWhich item "$1";}
 whereCost(){ whereWhich cost "$1";}
 # appendYear(){ awk '{print $1"-2022",$2,$3}'
-# skipFirst(){ tail -n+2;}
