@@ -19,8 +19,8 @@ getCost(){ whichGet "$(whereVar cost)";}
 itemNum(){ whichGet "$(whereVar item)" | cut -d'_' -f1;}
 itemNumOnly(){ itemNum | cut -d'-' -f1;}
 
-whereWhich(){ loopFile awk -v which="$2" -v where="$(whereVar "$1")" '$where ~ which';}
-whereDate(){ whereWhich date "$1";}
-whereItem(){ whereWhich item "$1";}
-whereCost(){ whereWhich cost "$1";}
+whichWhere(){ loopFile awk -v which="$2" -v where="$(whereVar "$1")" '$where ~ which';}
+whereDate(){ whichWhere date "$1";}
+whereItem(){ whichWhere item "$1";}
+whereCost(){ whichWhere cost "$1";}
 # appendYear(){ awk '{print $1"-2022",$2,$3}'
