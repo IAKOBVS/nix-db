@@ -1,5 +1,5 @@
 # nix-db
-A simple database that utilizes standard Unix utilities.
+A simple database manager that utilizes standard Unix utilities.
 ## Optional dependencies:
 rg (supposedly faster grep)
 <br/>
