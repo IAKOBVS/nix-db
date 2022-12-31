@@ -2,7 +2,7 @@
 [ -s /usr/bin/frawk ] && alias awk=frawk
 [ -s /usr/bin/grep ] && alias grep=rg
 DATA_DIR=$HOME/.local/bin/nix-db
-files=$(find "$DATA_DIR" -type f ! -name 'nix-db')
+files=$(find "$DATA_DIR" -type f ! -name 'nix-db' ! -name 'README.md' -not -iwholename '*.git*')
 vars=($(for file in $files; do head -n1 "$file"; done))
 whereVar(){ i=1
 	for var in "${vars[@]}"; do
