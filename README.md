@@ -6,6 +6,7 @@ rg (supposedly faster grep)
 frawk (supposedly faster awk)
 <br/>
 ## Installation
-> git clone https://github.com/IAKOBVS/nix-db
-
-> . /path/to/nix-db
+```
+git clone https://github.com/IAKOBVS/nix-db
+. /path/to/nix-db
+```
