@@ -13,6 +13,7 @@ whereVar(){ i=1
 loopFile(){ for file in $files; do
 		"$@" "$file"
 	done;}
+getAll(){ loopFile awk -v which="$1" 'NF {print $which}';}
 whichGet(){ loopFile awk -v which="$1" 'NF {print $which}' | tail -n+2;}
 getDate(){ whichGet "$(whereVar date)";}
 getItem(){ whichGet "$(whereVar item)";}
