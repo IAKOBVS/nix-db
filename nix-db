@@ -2,27 +2,52 @@
 [ -s /usr/bin/frawk ] && alias awk=frawk
 [ -s /usr/bin/grep ] && alias grep=rg
 DATA_DIR=$HOME/.local/bin/nix-db/db
-getFiles(){ find "$DATA_DIR" -type f;}
+RAM_DIR=/tmp
+RAM_DATA=$RAM_DIR/db
+WHERE_DIR=$RAM_DATA
+[ ! -s /tmp/db ] && mkdir /tmp/db
+toRam(){ cp -r "$DATA_DIR" $RAM_DATA;}
+getFiles(){ find "$WHERE_DIR" -type f;}
 files=($(getFiles))
-vars=($(for file in "${files[@]}"; do head -n1 "$file"; done))
-whereVar(){ i=1
+getVars(){ for file in "${files[@]}"; do head -n1 "$file" & done;}
+vars=($(getVars))
+# vars=($(for file in "${files[@]}"; do head -n1 "$file"; done))
+whereVar(){
+	i=1
 	for var in "${vars[@]}"; do
 		[ "$var" = "$1" ] && echo "$i" && return
 		i=$((i=i+1))
 	done;}
-loopFile(){ for file in "${files[@]}"; do
+loopFile(){
+	for file in "${files[@]}"; do
 		"$@" "$file" &
 	done;}
-getAllHeader(){ loopFile awk -v which="$1" 'NF {print $which}';}
+loopLine(){
+	while read -r line; do
+		echo "$line" | "$@" &
+	done;}
+loopFileInLine(){
+	for file in "${files[@]}"; do
+		cat "$file" &
+		while read -r line; do
+			echo "$line" | "$@" &
+		done
+	done;}
+getAllHeader(){ loopFileInLine awk -v which="$1" 'NF {print $which}';}
 getAll(){ loopFile awk -v which="$1" 'NF {print $which}' | tail -n+2;}
-whichWhere(){ loopFile awk -v which="$2" -v where="$(whereVar "$1")" '$where ~ which';}
-whereDate(){ whichWhere date;}
-whereItem(){ whichWhere item;}
-whereCost(){ whichWhere cost;}
-# appendYear(){ awk '{print $1"-2022",$2,$3}'
-whichGet(){ awk -v which="$1" 'NF {print $which}';}
-getDate(){ whichGet "$(whereVar date)";}
-getItem(){ whichGet "$(whereVar item)";}
-getCost(){ whichGet "$(whereVar cost)";}
-getItemNum(){ whichGet "$(whereVar item)" | cut -d'_' -f1;}
+
+where(){ loopLine awk -v where="$(whereVar "$1")" -v which="$2" '$where ~ which';}
+whereDate(){ where date "$1";}
+whereItem(){ where item "$1";}
+whereCost(){ where cost "$1";}
+
+get(){ loopLine awk -v which="$(whereVar "$1")" 'NF {print $which}';}
+getDate(){ get date;}
+getItem(){ get item;}
+getCost(){ get cost;}
+getItemNum(){ get item | cut -d'_' -f1;}
 getItemNumOnly(){ getItem | cut -d'-' -f1;}
+
+sum(){ tr -d ',' | awk '{sum += $0} END {print sum}';}
+sumH(){ printf "%'.3f\n" "$(sum)";}
+# appendYear(){ awk '{print $1"-2022",$2,$3}'
