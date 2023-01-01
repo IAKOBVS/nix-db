@@ -4,32 +4,36 @@
 DATA_DIR=$HOME/.local/bin/nix-db/db
 RAM_DIR=/tmp
 RAM_DATA=$RAM_DIR/db/data
+RAM_DB=$RAM_DIR/db
+RAM_TMP=$RAM_DB/tmp
 WHERE_DIR=$RAM_DATA
 toRam(){ /bin/cp -rf "$DATA_DIR" $RAM_DIR > /dev/null;}
-toRam
+toRam; [ ! -d $RAM_DB ] && mkdir $RAM_DB
 getFiles(){ files=($(find "$WHERE_DIR" -type f -name '*.tsv'));}
 getFiles
-getVars(){
-	for var in $(head -n1 "$file"); do
-		vars+=("$var")
-	done;}
+# getVars(){
+# 	for var in $(head -n1 "$file"); do
+# 		vars+=("$var")
+# 	done;}
 whereVar(){
-	vars=($(head -n1 "$file"))
+	vars=($(head -n1 $(< "$RAM_TMP"/currFile)))
+	i=1
 	for var in "${vars[@]}"; do
-		[ "$var" = "$1" ] && echo "${!vars[@]}" && return
+		[ "$var" = "$1" ] && echo "$i" && return
+		i=$((i=i+1))
 	done;}
 where(){ awk -v where="$(whereVar "$1")" -v which="$2" '$where ~ which';}
 wh(){ where "$@" | tee;}
-whereDate(){ where date "$1";}
-whereItem(){ where item "$1";}
-whereCost(){ where cost "$1";}
+whereDate(){ where date "$1" "$file";}
+whereItem(){ where item "$1" "$file";}
+whereCost(){ where cost "$1" "$file";}
 
-whereEx(){ awk -v where="$(whereVar "$1")" -v which="$2" '$where == which';}
+whereEx(){ awk -v where="$(whereVar "$file")" -v which="$1" '$where == which';}
 wex(){ whereEx "$@";}
 
 get(){ awk -v which="$(whereVar "$1")" 'NF {print $which}';}
-gt(){ awk -v which="$(whereVar "$1")" 'NF {print $which}' "$2";}
-getAll(){ awk 'NF {print}' "${files[@]}";}
+getAll(){ awk 'NF {print}' "$1"; echo "$PWD/$1" > $RAM_TMP/currFile;}
+gat(){ getAll "$@" | column -t;}
 getDate(){ get date;}
 getItem(){ get item;}
 getCost(){ get cost;}
@@ -45,6 +49,6 @@ day(){ cut -d'-' -f1;}
 mon(){ cut -d'-' -f2;}
 yr(){ cut -d'-' -f3;}
 
+alias gt=get
 alias ga=getAll
-alias gat="getAll | column -t"
 alias wcl=whereClean
