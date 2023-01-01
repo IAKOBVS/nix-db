@@ -1,49 +1,35 @@
 #!/usr/bin/bash
-[ -s /usr/bin/frawk ] && alias awk=frawk
+# [ -s /usr/bin/frawk ] && alias awk="frawk"
 [ -s /usr/bin/grep ] && alias grep=rg
 DATA_DIR=$HOME/.local/bin/nix-db/db
 RAM_DIR=/tmp
-RAM_DATA=$RAM_DIR/db
+RAM_DATA=$RAM_DIR/db/data
 WHERE_DIR=$RAM_DATA
-toRam(){ cp -rf "$DATA_DIR" $RAM_DIR && rm -rf $RAM_DATA/.git;}
-[ ! -s /tmp/db ] && mkdir /tmp/db && toRam
-getFiles(){ find "$WHERE_DIR" -type f;}
-files=($(getFiles))
-getVars(){ for file in "${files[@]}"; do head -n1 "$file" & done;}
-vars=($(getVars))
-# vars=($(for file in "${files[@]}"; do head -n1 "$file"; done))
+toRam(){ /bin/cp -rf "$DATA_DIR" $RAM_DIR > /dev/null;}
+toRam
+getFiles(){ files=($(find "$WHERE_DIR" -type f -name '*.tsv'));}
+getFiles
+getVars(){
+	for var in $(head -n1 "$file"); do
+		vars+=("$var")
+	done;}
 whereVar(){
-	i=1
+	vars=($(head -n1 "$file"))
 	for var in "${vars[@]}"; do
-		[ "$var" = "$1" ] && echo "$i" && return
-		i=$((i=i+1))
+		[ "$var" = "$1" ] && echo "${!vars[@]}" && return
 	done;}
-loopFile(){
-	for file in "${files[@]}"; do
-		"$@" "$file" &
-	done;}
-loopLine(){
-	while read -r line; do
-		echo "$line" | "$@" &
-	done;}
-loopFileInLine(){
-	for file in "${files[@]}"; do
-		cat "$file" &
-	done;}
-getAllHeader(){ loopFileInLine | loopLine awk -v which="$1" 'NF {print $which}';}
-getAll(){ loopFileInLine | loopLine awk -v which="$1" 'NF {print $which}' | tail -n+2;}
-
-where(){ loopLine awk -v where="$(whereVar "$1")" -v which="$2" '$where ~ which';}
+where(){ awk -v where="$(whereVar "$1")" -v which="$2" '$where ~ which';}
 wh(){ where "$@" | tee;}
 whereDate(){ where date "$1";}
 whereItem(){ where item "$1";}
 whereCost(){ where cost "$1";}
 
-whereEx(){ loopLine awk -v where="$(whereVar "$1")" -v which="$2" '$where == which';}
-wex(){ whereEx "$@" | tee;}
+whereEx(){ awk -v where="$(whereVar "$1")" -v which="$2" '$where == which';}
+wex(){ whereEx "$@";}
 
-get(){ loopLine awk -v which="$(whereVar "$1")" 'NF {print $which}';}
-gt(){ get "$1" | tee;}
+get(){ awk -v which="$(whereVar "$1")" 'NF {print $which}';}
+gt(){ awk -v which="$(whereVar "$1")" 'NF {print $which}' "$2";}
+getAll(){ awk 'NF {print}' "${files[@]}";}
 getDate(){ get date;}
 getItem(){ get item;}
 getCost(){ get cost;}
@@ -53,7 +39,7 @@ getItemNumOnly(){ getItem | cut -d'-' -f1;}
 sum(){ tr -d ',' | awk '{sum += $0} END {print sum}';}
 sumh(){ printf "%'.3f\n" "$(sum)";}
 
-whereClean(){ where "$@" | tee;}
+whereClean(){ where "$@";}
 
 day(){ cut -d'-' -f1;}
 mon(){ cut -d'-' -f2;}
@@ -62,5 +48,3 @@ yr(){ cut -d'-' -f3;}
 alias ga=getAll
 alias gat="getAll | column -t"
 alias wcl=whereClean
-
-# appendYear(){ awk '{print $1"-2022",$2,$3}'
