@@ -5,8 +5,8 @@ DATA_DIR=$HOME/.local/bin/nix-db/db
 RAM_DIR=/tmp
 RAM_DATA=$RAM_DIR/db
 WHERE_DIR=$RAM_DATA
-[ ! -s /tmp/db ] && mkdir /tmp/db
 toRam(){ cp -r "$DATA_DIR" $RAM_DATA;}
+[ ! -s /tmp/db ] && mkdir /tmp/db && toram
 getFiles(){ find "$WHERE_DIR" -type f;}
 files=($(getFiles))
 getVars(){ for file in "${files[@]}"; do head -n1 "$file" & done;}
@@ -29,12 +29,9 @@ loopLine(){
 loopFileInLine(){
 	for file in "${files[@]}"; do
 		cat "$file" &
-		while read -r line; do
-			echo "$line" | "$@" &
-		done
 	done;}
-getAllHeader(){ loopFileInLine awk -v which="$1" 'NF {print $which}';}
-getAll(){ loopFile awk -v which="$1" 'NF {print $which}' | tail -n+2;}
+getAllHeader(){ loopFileInLine | loopLine awk -v which="$1" 'NF {print $which}';}
+getAll(){ loopFileInLine | loopLine awk -v which="$1" 'NF {print $which}' | tail -n+2;}
 
 where(){ loopLine awk -v where="$(whereVar "$1")" -v which="$2" '$where ~ which';}
 whereDate(){ where date "$1";}
@@ -51,3 +48,4 @@ getItemNumOnly(){ getItem | cut -d'-' -f1;}
 sum(){ tr -d ',' | awk '{sum += $0} END {print sum}';}
 sumH(){ printf "%'.3f\n" "$(sum)";}
 # appendYear(){ awk '{print $1"-2022",$2,$3}'
+alias ga=ga
