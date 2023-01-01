@@ -8,5 +8,5 @@ frawk (supposedly faster awk)
 ## Installation
 ```
 git clone https://github.com/IAKOBVS/nix-db
-. /path/to/nix-db
+. /path/to/nix-db/nix-db
 ```
