@@ -11,18 +11,18 @@ whereVar(){ i=1
 		i=$((i=i+1))
 	done;}
 loopFile(){ for file in "${files[@]}"; do
-		"$@" "$file"
+		"$@" "$file" &
 	done;}
-getAll(){ loopFile awk -v which="$1" 'NF {print $which}';}
-whichGet(){ loopFile awk -v which="$1" 'NF {print $which}' | tail -n+2;}
+getAllHeader(){ loopFile awk -v which="$1" 'NF {print $which}';}
+getAll(){ loopFile awk -v which="$1" 'NF {print $which}' | tail -n+2;}
+whichWhere(){ loopFile awk -v which="$2" -v where="$(whereVar "$1")" '$where ~ which';}
+whereDate(){ whichWhere date;}
+whereItem(){ whichWhere item;}
+whereCost(){ whichWhere cost;}
+# appendYear(){ awk '{print $1"-2022",$2,$3}'
+whichGet(){ awk -v which="$1" 'NF {print $which}';}
 getDate(){ whichGet "$(whereVar date)";}
 getItem(){ whichGet "$(whereVar item)";}
 getCost(){ whichGet "$(whereVar cost)";}
-itemNum(){ whichGet "$(whereVar item)" | cut -d'_' -f1;}
-itemNumOnly(){ itemNum | cut -d'-' -f1;}
-
-whichWhere(){ loopFile awk -v which="$2" -v where="$(whereVar "$1")" '$where ~ which';}
-whereDate(){ whichWhere date "$1";}
-whereItem(){ whichWhere item "$1";}
-whereCost(){ whichWhere cost "$1";}
-# appendYear(){ awk '{print $1"-2022",$2,$3}'
+getItemNum(){ whichGet "$(whereVar item)" | cut -d'_' -f1;}
+getItemNumOnly(){ getItem | cut -d'-' -f1;}
