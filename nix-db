@@ -1,16 +1,16 @@
 #!/usr/bin/bash
 [ -s /usr/bin/frawk ] && alias awk=frawk
 [ -s /usr/bin/grep ] && alias grep=rg
-DATA_DIR=$HOME/.local/bin/nix-db
-getFiles(){ find "$DATA_DIR" -type f ! -name 'nix-db' ! -name 'README.md' -not -iwholename '*.git*';}
-files=$(getFiles)
-vars=($(for file in $files; do head -n1 "$file"; done))
+DATA_DIR=$HOME/.local/bin/nix-db/db
+getFiles(){ find "$DATA_DIR" -type f;}
+files=($(getFiles))
+vars=($(for file in "${files[@]}"; do head -n1 "$file"; done))
 whereVar(){ i=1
 	for var in "${vars[@]}"; do
 		[ "$var" = "$1" ] && echo "$i" && return
 		i=$((i=i+1))
 	done;}
-loopFile(){ for file in $files; do
+loopFile(){ for file in "${files[@]}"; do
 		"$@" "$file"
 	done;}
 getAll(){ loopFile awk -v which="$1" 'NF {print $which}';}
