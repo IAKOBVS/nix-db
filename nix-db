@@ -6,7 +6,7 @@ RAM_DIR=/tmp
 RAM_DATA=$RAM_DIR/db
 WHERE_DIR=$RAM_DATA
 toRam(){ cp -r "$DATA_DIR" $RAM_DATA;}
-[ ! -s /tmp/db ] && mkdir /tmp/db && toram
+[ ! -s /tmp/db ] && mkdir /tmp/db && toRam
 getFiles(){ find "$WHERE_DIR" -type f;}
 files=($(getFiles))
 getVars(){ for file in "${files[@]}"; do head -n1 "$file" & done;}
@@ -47,5 +47,9 @@ getItemNumOnly(){ getItem | cut -d'-' -f1;}
 
 sum(){ tr -d ',' | awk '{sum += $0} END {print sum}';}
 sumH(){ printf "%'.3f\n" "$(sum)";}
+
+whereClean(){ where "$@" | tee;}
+
+alias ga=getAll
+alias wcl=whereClean
 # appendYear(){ awk '{print $1"-2022",$2,$3}'
-alias ga=ga
