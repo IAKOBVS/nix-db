@@ -1,22 +1,25 @@
 #!/usr/bin/bash
 # [ -s /usr/bin/frawk ] && alias awk="frawk"
 [ -s /usr/bin/grep ] && alias grep=rg
+DB_DIR=$HOME/.local/bin/nix-db
 DATA_DIR=$HOME/.local/bin/nix-db/db
 RAM_DIR=/tmp
 RAM_DATA=$RAM_DIR/db/data
 RAM_DB=$RAM_DIR/db
-RAM_TMP=$RAM_DB/tmp
+RAM_TMP=$RAM_DB/temp
+CURR_FILE=$RAM_TMP/currFile
 WHERE_DIR=$RAM_DATA
 toRam(){ /bin/cp -rf "$DATA_DIR" $RAM_DIR > /dev/null;}
-toRam; [ ! -d $RAM_DB ] && mkdir $RAM_DB
-getFiles(){ files=($(find "$WHERE_DIR" -type f -name '*.tsv'));}
+toRam
+rmRam(){ rm -rf "$RAM_DATA";}
+rmTemp(){ rm -rf "$RAM_TMP";}
+todb(){ /bin/cp -rf "$RAM_DATA" "$DB_DIR";}
+# toRam
+[ ! -d $RAM_DB ] && mkdir $RAM_DB; [ ! -d $RAM_TMP ] && mkdir $RAM_TMP
+getFile(){ files=($(find "$WHERE_DIR" -type f -name '*.tsv'));}
 getFiles
-# getVars(){
-# 	for var in $(head -n1 "$file"); do
-# 		vars+=("$var")
-# 	done;}
 whereVar(){
-	vars=($(head -n1 $(< "$RAM_TMP"/currFile)))
+	vars=($(head -n1 $(< "$CURR_FILE")))
 	i=1
 	for var in "${vars[@]}"; do
 		[ "$var" = "$1" ] && echo "$i" && return
@@ -24,15 +27,16 @@ whereVar(){
 	done;}
 where(){ awk -v where="$(whereVar "$1")" -v which="$2" '$where ~ which';}
 wh(){ where "$@" | tee;}
-whereDate(){ where date "$1" "$file";}
-whereItem(){ where item "$1" "$file";}
-whereCost(){ where cost "$1" "$file";}
+whereDate(){ where date "$1";}
+whereItem(){ where item "$1";}
+whereCost(){ where cost "$1";}
 
 whereEx(){ awk -v where="$(whereVar "$file")" -v which="$1" '$where == which';}
 wex(){ whereEx "$@";}
 
 get(){ awk -v which="$(whereVar "$1")" 'NF {print $which}';}
-getAll(){ awk 'NF {print}' "$1"; echo "$PWD/$1" > $RAM_TMP/currFile;}
+getWith(){ awk -v which="$(whereVar "$1")" 'NF {print $which}' "$2";}
+getAll(){ awk 'NF {print}' "$1"; echo "$RAM_DATA/$1" > "$CURR_FILE";}
 gat(){ getAll "$@" | column -t;}
 getDate(){ get date;}
 getItem(){ get item;}
@@ -40,15 +44,45 @@ getCost(){ get cost;}
 getItemNum(){ get item | cut -d'_' -f1;}
 getItemNumOnly(){ getItem | cut -d'-' -f1;}
 
+# getJoin(){ 
+# 	whereFiles=$RAM_TMP/columnFiles
+# 	tempFile=$RAM_TMP/$arg
+# 	for arg in "$@"; do
+# 		getWith "$arg" "$(< $CURR_FILE)" > "$tempFile"
+# 		[ -z "$(grep -F "$arg-$(< $CURR_FILE)" $whereFiles)" ] && echo "$tempFile" >> $whereFiles
+# 	done
+# 	paste $(< $whereFiles);}
+getJoin(){
+	case $# in
+		1)
+			paste <(getWith "$1" "$(< $CURR_FILE)");;
+		2)
+			paste <(getWith "$1" "$(< $CURR_FILE)") <(getWith "$2" "$(< $CURR_FILE)");;
+		3)
+			paste <(getWith "$1" "$(< $CURR_FILE)") <(getWith "$2" "$(< $CURR_FILE)") <(getWith "$3" "$(< $CURR_FILE)");;
+		4)
+			paste <(getWith "$1" "$(< $CURR_FILE)") <(getWith "$2" "$(< $CURR_FILE)") <(getWith "$3" "$(< $CURR_FILE)") <(getWith "$4" "$(< $CURR_FILE)");;
+		5)
+			paste <(getWith "$1" "$(< $CURR_FILE)") <(getWith "$2" "$(< $CURR_FILE)") <(getWith "$3" "$(< $CURR_FILE)") <(getWith "$4" "$(< $CURR_FILE)" <(getWith "$5" "$(< $CURR_FILE)"));;
+	esac;}
+gj(){ getJoin "$@" | column -t;}
 sum(){ tr -d ',' | awk '{sum += $0} END {print sum}';}
 sumh(){ printf "%'.3f\n" "$(sum)";}
 
+mult(){	tr -d ',' | awk -v numOne="$(whereVar "$1")" -v numTwo="$(whereVar "$2")" '{print($numOne * $numTwo)}';}
+multNow(){ tr -d ',' | awk -v numOne="$1" -v numTwo="$2" '{print($numOne * $numTwo)}';}
 whereClean(){ where "$@";}
 
 day(){ cut -d'-' -f1;}
 mon(){ cut -d'-' -f2;}
 yr(){ cut -d'-' -f3;}
 
+ih(){ tail -n+2;}
+ihc(){ tail -n+3;}
+
+addSpace(){ sed 's/$/\n/g';}
+
 alias gt=get
+alias gwi=getWith
 alias ga=getAll
 alias wcl=whereClean
